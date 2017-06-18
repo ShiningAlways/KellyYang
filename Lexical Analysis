@@ -1,0 +1,176 @@
+#include "stdio.h"
+#include "string.h"
+/////////////////////////////////////////////////////////////////////////////////////////////
+char prog[1024],token[8],exist[1024];
+char ch,a[4];
+int i,t,x=0,y=0,p,m=0,n,sum=0,k;
+//关键字表
+char *keyTab[10]={"begin","do","else","end","if","then","var","while","program"};
+/////////////////////////////////////////////////////////////////////////////////////////////
+//函数声明
+void fileOpen();
+void scaner();
+/////////////////////////////////////////////////////////////////////////////////////////////
+//文件读取
+void fileOpen()
+{
+	FILE *fp;
+	char text[1024];
+	if((fp=fopen("d:\\Example.txt","r"))==NULL)
+	{
+		printf("fail to open the file\n");
+	}
+	while((ch=fgetc(fp))!=EOF)
+	{
+	
+		printf("%c",ch);
+		//将回车/换行转换为空格
+		if(ch=='\r'||ch=='\n') ch=' ';
+		prog[p++]=ch;
+	}
+	fclose(fp);
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+//词法分析
+void scaner()
+{
+	for(n=0;n<8;n++) token[n]=NULL;
+    ch=prog[p++];
+    while(ch==' ')
+    {
+        ch=prog[p];
+        p++;
+    }
+	//标示符或变量名
+    if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z'))   
+    {
+        m=0;
+        while((ch>='0'&&ch<='9')||(ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z'))
+        {
+            token[m++]=ch;
+			for(k=0;k<=x;k++)
+			{
+				if(ch!=exist[k])
+				{i=x;exist[x]=ch;}
+				else if(ch==exist[k])
+				{i=k;break;}
+			}
+            ch=prog[p++];
+        }
+		x++;
+        token[m++]='\0';
+        p--;
+		t=6;
+		//将识别出来的字符和关键字表比较， 
+        for(n=0;n<9;n++)  
+            if(strcmp(token,keyTab[n])==0)
+            {
+                t=1;
+				i=n;
+				x--;
+                break;
+            }
+    }
+	//数字 
+    else if((ch>='0'&&ch<='9'))  
+    {
+        {
+            sum=0;
+            while((ch>='0'&&ch<='9'))
+            {
+                sum=sum*10+ch-'0';
+                ch=prog[p++];
+            }
+        }
+        p--;
+        t=5;
+		i=y;
+		y++;
+        if(sum>32767)
+            t=-1;
+    }
+	//其他字符 
+    else switch(ch)   
+    {
+        case'<':m=0;token[m++]=ch;t=4;
+            ch=prog[p++];
+            if(ch=='>')
+            {
+                strcpy(a,"05H");
+                token[m++]=ch;
+            }
+            else if(ch=='=')
+            {
+                strcpy(a,"01H");
+                token[m++]=ch;
+            }
+            else
+            {
+                strcpy(a,"00H");
+                p--;
+            }
+            break;
+        case'>':m=0;token[m++]=ch;t=4;
+            ch=prog[p++];
+            if(ch=='=')
+            {
+                strcpy(a,"04H");
+                token[m++]=ch;
+            }
+            else
+            {
+                strcpy(a,"03H");
+                p--;
+            }
+            break;
+        case':':m=0;token[m++]=ch;t=2;
+            ch=prog[p++];
+            if(ch=='=')
+            {
+                i=3;
+                token[m++]=ch;
+            }
+			else {p=p-1;}
+            break;
+        case'*':t=3;strcpy(a,"20H");token[0]=ch;break;
+        case'/':t=3;strcpy(a,"21H");token[0]=ch;break;
+        case'+':t=3;strcpy(a,"10H");token[0]=ch;break;
+        case'-':t=3;strcpy(a,"11H");token[0]=ch;break;
+        case'=':t=4;strcpy(a,"02H");token[0]=ch;break;
+        case';':t=2;i=1;token[0]=ch;break;
+        case'(':t=2;i=4;;token[0]=ch;break;
+        case')':t=2;i=5;token[0]=ch;break;
+		case',':t=2;i=0;token[0]=ch;break;
+		case'.':t=2;i=2;token[0]=ch;break;
+        case'#':t=0;strcpy(a,"  ");token[0]=ch;break;
+        default: t=-1;break;
+    }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+//主函数
+void main()
+{
+
+	printf("the string is:\n");
+	fileOpen();
+	printf("\n");
+
+	printf("\nt\ti\ttoken\n"); 
+    p=0;
+    do
+    {
+        scaner();
+        switch(t)
+        {
+        case 6: printf("%d\t%d\t%s\n",t,i,token); break;
+		case 1: printf("%d\t%d\t%s\n",t,i,token); break;  
+		case 5: printf("%d\t%d\t%d\n",t,i,sum); break; 
+        case -1: printf("error\n");break;
+		case 2: printf("%d\t%d\t%s\n",t,i,token);break;
+        default: printf("%d\t%s\t%s\n",t,a,token);break;
+        }
+    }
+    while (t!=0);
+	printf("\n");
+}
+
